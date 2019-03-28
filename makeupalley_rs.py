@@ -130,8 +130,6 @@ def rm_delimiters(ingr_row):
     :param ingr_row: a string row (of dataframe) of ingredients
     :return: list of (str) ingredients
     """
-    # remove numbers
-    # add 'and' and '-' and '.', ':', '...', '/' as splitter
     delim = [',', 'and', '\.+', ':', '/', '\s-+\s', '\*+', '\[\]', '\a', '\n', '\t', '\s\s+', 'â¢', ';', '-+', '_+'
         , 'active\singredients', 'also\scontains', 'rapid\sactivation\sgel', 'step\s1', 'step\s2', 'step\s3'
         , 'active\singredient', 'inactive\singredients', 'inactive\singredient', 'other\singredients'
@@ -148,8 +146,6 @@ def water_parse(ingr_list):
     :return: ingredients 'water' and 'water-binding'
     """
     water = ['water' if ('water' in ingr and 'water-binding' not in ingr) else ingr for ingr in ingr_list]
-    # regex = re.compile(r'(water)')
-    # water = [match for match in regex.findall(ingr) else ingr for ingr in ingr_list]
     return water
 
 def oil_parse(ingr_list):
@@ -159,8 +155,6 @@ def oil_parse(ingr_list):
     :return: ingredients 'oil'
     """
     oil = ['oil' if (' oil' in ingr and 'mineral oil' not in ingr) else ingr for ingr in ingr_list]
-    # regex = re.compile(r'(water)')
-    # water = [match for match in regex.findall(ingr) else ingr for ingr in ingr_list]
     return oil
 
 
@@ -171,36 +165,23 @@ def extract_parse(ingr_list):
     :return: ingredients 'extract'
     """
     extract = ['extract' if ' extract' in ingr else ingr for ingr in ingr_list]
-    # regex = re.compile(r'(water)')
-    # water = [match for match in regex.findall(ingr) else ingr for ingr in ingr_list]
     return extract
 
 
 
-# remove words with 'ingredient' in it
-# do parsing on popular words
-# remove words with less than 2 char
-# remove numbers
 
 # split ingredients column into a list of string instead of strings
-df_content_uniq['ingredients_n'] = df_content_uniq['ingredients'].apply(lambda x: rm_delimiters(x))
-
 # turn lower case, strip leading and trailing spaces, remove empty lists
-df_content_uniq['ingredients_n'] = df_content_uniq['ingredients_n'].apply(lambda x: list(filter(None, [i.lower().strip() for i in x])))
-
 # parse water ingredients
-df_content_uniq['ingredients_n'] = df_content_uniq['ingredients_n'].apply(lambda x: water_parse(x))
-
 # parse oil ingredients
-df_content_uniq['ingredients_n'] = df_content_uniq['ingredients_n'].apply(lambda x: oil_parse(x))
-
 # parse extracts ingredients
-df_content_uniq['ingredients_n'] = df_content_uniq['ingredients_n'].apply(lambda x: extract_parse(x))
-
-
 # keep words with more than 3 characters
-df_content_uniq['ingredients_n'] = df_content_uniq['ingredients_n'].apply(lambda x: [word for word in x if len(word)>3])
-# now we have empty lists for rows with no ingredients
+df_content_uniq['ingredients_n'] = df_content_uniq['ingredients'].apply(lambda x: rm_delimiters(x))\
+                    .apply(lambda x: list(filter(None, [i.lower().strip() for i in x])))\
+                    .apply(lambda x: water_parse(x))\
+                    .apply(lambda x: oil_parse(x))\
+                    .apply(lambda x: extract_parse(x))\
+                    .apply(lambda x: [word for word in x if len(word)>3])
 
 # list of ingredients of each product
 words = list(df_content_uniq.ingredients_n)
@@ -435,14 +416,15 @@ prod_rec = pd.merge(rec, prod_df, left_on=rec.rec1, right_on=prod_df.pro_ids, ho
 
 prod_rec_dedup = prod_rec.drop(['key_0', 'uid_x', 'rec1'], axis=1).drop_duplicates()
 
-top10_df = pd.DataFrame(top10)
-top10_rec = pd.merge(top10_df, prod_df, left_on=top10_df.index, right_on=prod_df.names, how='left')
-
-tot_rec = prod_rec_dedup[['names', 'ratings', 'repurchases', 'pkg_quals', 'prices',
-       'ingredients', 'brands']].append(top10_rec[['names', 'ratings', 'repurchases', 'pkg_quals', 'prices',
-       'ingredients', 'brands']])
-
-test = tot_rec.sample(10, random_state=123)
+# this combine step will be done in app.py
+# top10_df = pd.DataFrame(top10)
+# top10_rec = pd.merge(top10_df, prod_df, left_on=top10_df.index, right_on=prod_df.names, how='left')
+#
+# tot_rec = prod_rec_dedup[['names', 'ratings', 'repurchases', 'pkg_quals', 'prices',
+#       'ingredients', 'brands']].append(top10_rec[['names', 'ratings', 'repurchases', 'pkg_quals', 'prices',
+#       'ingredients', 'brands']])
+#
+# test = tot_rec.sample(10, random_state=123)
 
 
 
